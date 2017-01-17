@@ -9,8 +9,13 @@ now = datetime.datetime.now()
 print str(now)
 output = open('log_'+str(now)+'.txt', 'w')
 
+buf = ''
 while True:
-    if ser.in_waiting():
-        output.write(ser.read())
+    if ser.in_waiting:
+        buf += ser.read()
+        if buf[-1] == '\n':
+            output.write(buf)
+            print buf
+            buf = ''
 
 output.close()
