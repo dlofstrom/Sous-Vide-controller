@@ -4,10 +4,12 @@ import datetime
 
 #Enter the COM port as argument
 
-ser = serial.Serial(sys.argv[1], baudrate=9600, timeout=None)
 now = datetime.datetime.now()
+now = ''.join([i for i in str(now)[:19] if not i in ' -:'])
 print str(now)
-output = open('log_'+str(now)+'.txt', 'w')
+
+ser = serial.Serial(sys.argv[1], baudrate=9600, timeout=None)
+output = open('log_'+now+'.txt', 'w')
 
 buf = ''
 while True:
