@@ -60,8 +60,11 @@ int pot_value = 0;
 int16_t temperature_setpoint = 0;
 int16_t analog_value = 0;
 int16_t temperature_value = 0;
+int16_t temperature_measured = 0;
 uint8_t heater_state = 0;
-
+const float iir_divisor = 0.1f;
+uint8_t button_val = LOW;
+uint8_t button_old = LOW;
 
 void print_lcd() {
   if (system_mode == 0) {
@@ -87,7 +90,8 @@ void print_lcd() {
   }
 }
 
-
+unsigned long tic;
+unsigned long toc;
 void setup() {
   //16x2 Display
   lcd.begin(16, 2);
@@ -104,10 +108,15 @@ void setup() {
   //Initial message
   lcd.print("Sous vide cooker");
   delay(5000);
+
+  tic = millis();
+  toc = millis();
 }
 
 
 void loop() {
+  toc = millis();
+
   if (system_mode == 0) {
     //Choose temperature mode
     //Shut down everything
@@ -127,18 +136,26 @@ void loop() {
     //Read temperature and control heater
     analog_value = analogRead(THERMISTOR_PIN);
     temperature_value = pgm_read_word(&thermistor_lookup[analog_value]);
-    if (temperature_value < temperature_setpoint) {
-      digitalWrite(HEATER_PIN, HIGH);
-    } else {
-      digitalWrite(HEATER_PIN, LOW);
+    //IIR filter for more stable temperature
+    temperature_measured = (int16_t)(iir_divisor*(float)temperature_value + (1.0 - iir_divisor)*(float)temperature_measured);
+    
+    //Regulate every 5 seconds
+    if (toc - tic >= 5000) {
+      if (temperature_value < temperature_setpoint) {
+        digitalWrite(HEATER_PIN, HIGH);
+      } else {
+        digitalWrite(HEATER_PIN, LOW);
+      }
     }
   }
 
   //Read button and toggle state
   //TODO: Do proper debounce and edge detection
-  if (digitalRead(BUTTON_PIN)) {
+  button_val = digitalRead(BUTTON_PIN);
+  if (button_old == LOW && button_val == HIGH) {
     system_mode ^= 0x01;
   }
+  button_old = button_val;
 
   //Print to LCD
   print_lcd();
@@ -156,6 +173,5 @@ void loop() {
   
   
   //Speed not important for now
-  //TODO: Use timer for this instead of delay
-  delay(1000);
+  delay(500);
 }
