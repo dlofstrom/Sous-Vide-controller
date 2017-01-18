@@ -146,6 +146,7 @@ void loop() {
       } else {
         digitalWrite(HEATER_PIN, LOW);
       }
+      tic = toc;
     }
   }
 
