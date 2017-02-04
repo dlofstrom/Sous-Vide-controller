@@ -101,8 +101,9 @@ void setup() {
   
   //Outputs
   pinMode(PUMP_PIN, OUTPUT);
-  analogWrite(PUMP_PIN, 255);
+  digitalWrite(PUMP_PIN, LOW);
   pinMode(HEATER_PIN, OUTPUT);
+  digitalWrite(HEATER_PIN, LOW);
   pinMode(LED_PIN, OUTPUT);
 
   //Initial message
@@ -121,7 +122,7 @@ void loop() {
     //Choose temperature mode
     //Shut down everything
     digitalWrite(HEATER_PIN, LOW);
-    analogWrite(PUMP_PIN, 255);
+    digitalWrite(PUMP_PIN, LOW);
 
     //Read potentiometer and choose temperature setpoint
     pot_value = analogRead(POT_PIN);
@@ -130,7 +131,7 @@ void loop() {
     //Cooking mode
     //Adjust pump speed
     pot_value = analogRead(POT_PIN);
-    analogWrite(PUMP_PIN, map(pot_value, 0, 1023, 255, 0));
+    digitalWrite(PUMP_PIN, HIGH);
     
     //Read temperature and control heater
     analog_value = analogRead(THERMISTOR_PIN);
@@ -138,8 +139,8 @@ void loop() {
     //IIR filter for more stable temperature
     temperature_measured = (int16_t)(iir_divisor*(float)temperature_value + (1.0 - iir_divisor)*(float)temperature_measured);
     
-    //Regulate every 5 seconds
-    if (toc - tic >= 5000) {
+    //Regulate every 2 seconds
+    if (toc - tic >= 2000) {
       if (temperature_value < temperature_setpoint) {
         digitalWrite(HEATER_PIN, HIGH);
       } else {
